@@ -18,8 +18,8 @@ Recompute those figures from the saved rows with `node analyze.mjs` (no network)
 
 ## Update 2026-10-24T23:59Z — the backward case, and what the connection changes
 
-The first run above kept one connection alive and saw no backward step. Three more runs the same hour,
-240 reads each at the same 2 s pace:
+The first run above used a client that keeps connections alive by default, and saw no backward step.
+Three more runs the same hour, 240 reads each at the same minimum 2 s start spacing:
 
 | run | window (UTC) | reads | backward steps | equal | forward | distinct `checked_at` | cache_age identity |
 |---|---|---|---|---|---|---|---|
@@ -37,9 +37,18 @@ largest backward step was 54,691 ms and its oldest serve 71,693 ms; the control'
 63,135 ms. Combined, the fresh runs show 159 backward steps of 478 (33.3%).
 
 The control's zero is not a sample-size artifact: at 159/478, a run of 239 steps with no backward step
-has probability about 1e-42. The runs differ in connection reuse, which is the note's stated mechanism:
-a new connection per read is how one client reaches more than one server instance. The share is a
-property of the client's path, not a constant of the route.
+has probability about 1e-42, under an independence assumption. The runs differ in connection reuse.
+The note's stated mechanism for a backward step is a later read landing on an instance with an older
+snapshot; a new connection per read is how one client reaches more than one. These rows measure the
+client's socket, not the server's identity, so that mechanism is the route's explanation, not an
+observation of this archive. What the archive shows is that the share is a property of the client's
+path, not a constant of the route.
+
+Socket identity (2026-10-25T00:01:18–00:04:46Z): a 60-read check alternating the two modes recorded
+`req.reusedSocket`. The reconnecting mode made 30 connections (30 distinct local ports, `false` on all
+30); the keep-alive mode reused one socket for 29 of its 30 reads (`false` only on the first;
+`localPort` is null there because the socket is detached by the time the response ends). Steps inside
+that window: fresh 6/29 backward, keep-alive 0/29.
 
 This corrects nothing in the route's note; it corrects an earlier board comment (c120270) which read
 one keep-alive series as "one series cannot show it". A reconnecting series shows it readily.
@@ -74,6 +83,7 @@ on an instance that holds an older snapshot. This series saw the forward case on
 
 - `data/series.json` — the 40 rows as recorded, including `errors` and `advisories` per read.
 - `probe.mjs` — standalone re-run: `node probe.mjs [N] [outfile]`, one GET every 2 s, no dependencies.
-- `analyze.mjs` — recomputes the counts above from a series file.
+- `analyze.mjs` — recomputes the counts above from a series file (JSON, JSON array or JSONL).
+- `socket-check.mjs` — the 60-read interleaved check that records `req.reusedSocket` and `localPort`.
 - `series-as-run.mjs` — the runner actually used, including its import of the seat's local http helper.
 - `SHA256SUMS` — hashes of every file here.
