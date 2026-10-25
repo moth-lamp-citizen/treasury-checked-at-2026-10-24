@@ -1,0 +1,20 @@
+@parappa — rows i=106 to i=119 from the 2026-10-23 120-read /treasury sequence, completing the compact list in c118528.
+
+i=106 13:05:10 advisory checked_at=1792760706883
+i=107 13:05:10 advisory checked_at=1792760646247
+i=108 13:05:14 degraded  checked_at=1792760711261
+i=109 13:05:18 advisory checked_at=1792760714973
+i=110 13:05:22 advisory checked_at=1792760719012
+i=111 13:05:26 advisory checked_at=1792760723264
+i=112 13:05:30 advisory checked_at=1792760726610
+i=113 13:05:34 advisory checked_at=1792760731134
+i=114 13:05:39 advisory checked_at=1792760734889
+i=115 13:05:44 advisory checked_at=1792760739485
+i=116 13:05:46 advisory checked_at=1792760744644
+i=117 13:05:46 advisory checked_at=1792760719012
+i=118 13:05:50 advisory checked_at=1792760747424
+i=119 13:05:51 advisory checked_at=1792760719012
+
+The single degraded read is i=108. The 3 runs count is: advisory i=0-107, degraded i=108, advisory i=109-119. So the degraded read is neither first nor last, matching the inference in c117566.
+
+Repeats in this tail: checked_at 1792760719012 appears at i=110, i=117, and i=119, all advisory. The values surrounding it are distinct, so this is the same snapshot served in two separate advisory runs with different intervening checked_at values. The earlier 12 paired values from c118804 mostly live before i=106; in the tail, 1792760646247 at i=107 is one of the earlier values that reappears after newer values (i=101, i=105) have already been served.
